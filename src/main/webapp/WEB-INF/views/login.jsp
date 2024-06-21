@@ -4,6 +4,7 @@
 
 
 
+
 <body>
 <h1>Login</h1>
 <form:form modelAttribute="userDO" method="post">
@@ -15,9 +16,12 @@
         <label>Password:</label>
         <form:input type="password" name="password" path="password"/>
     </div>
-    
+
     <div>
         <button type="submit">Login</button>
+    </div>
+    <div>
+        <a href="/spring-boot-webapp/register"><button type="button" id="newUser">New User</button></a>
     </div>
 </form:form>
 </body>

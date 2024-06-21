@@ -1,8 +1,15 @@
 package com.home.data;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+@Entity
+@Table(name = "app_user", schema = "ptl") // I don't like this. I think I will setup the repo instead. This
+//Needs to stay as just a DO for reusability.
 public class UserDO {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotEmpty(message = "Username is required")
     private String username;
