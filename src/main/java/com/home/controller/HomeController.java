@@ -1,5 +1,6 @@
 package com.home.controller;
 
+import com.home.data.SaltInfoDO;
 import com.home.data.UserDO;
 import com.home.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 public class HomeController {
@@ -39,7 +39,26 @@ public class HomeController {
     @PostMapping("/login")
     public String submitLogin(@ModelAttribute("userDO") @Valid UserDO userDO, BindingResult result, Model model){
         this.userDO = userDO;
-        return "redirect:/secure/secure-home";
+        String enteredPassword = userDO.getPassword();
+        UserDO userDO2 = userService.getUser(userDO.getUsername());
+        SaltInfoDO saltInfoDO = userService.getSaltInfo(userDO2.getId(), "Y");
+        if(userDO2 != null ){
+            String encodedPw = enteredPassword + saltInfoDO.getSaltTxt();
+            String dbPassword = userDO2.getPassword();
+
+
+            if(!userService.passwordEncoder().matches(encodedPw, dbPassword)){
+                model.addAttribute("errorMessage", "Username or password is incorrect.");
+                return "/login";
+            } else {
+                model.addAttribute("userDO", userDO);
+                return "redirect:/secure/secure-home";
+            }
+
+        } else {
+            model.addAttribute("errorMessage", "User cannot be found.");
+            return "/login";
+        }
     }
 
     @PostMapping(value = "/login", params = {"newUser"})
@@ -64,9 +83,19 @@ public class HomeController {
 
     @PostMapping("/register")
     public String registerUser(@ModelAttribute("userDO") @Valid UserDO userDO, BindingResult result, Model model) {
+
+        String salt = userService.generateRandomSalt();
+        String encodedPassword = userDO.getPassword() + salt;
+        String encryptPassword = userService.passwordEncoder().encode(encodedPassword);
+        userDO.setPassword(encryptPassword);
         userService.saveUser(userDO);
 
-        return null;
+        SaltInfoDO saltInfoDO = new SaltInfoDO();
+        saltInfoDO.setSaltTxt(salt);
+        saltInfoDO.setUserUid(userDO.getId());
+        saltInfoDO.setActiveInd("Y");
+        userService.saveSalt(saltInfoDO);
+        return "/login";
     }
 }
 
